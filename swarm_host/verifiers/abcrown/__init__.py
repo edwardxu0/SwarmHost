@@ -12,13 +12,13 @@ class ABCrown(Verifier):
 
     def configure(self, property):
         vc = VerifierConfigs(self)
-        print(vc.configs)
         vc.configs["data"]["dataset"] = property["artifact"]
         vc.configs["data"]["start"] = property["id"]
         vc.configs["data"]["end"] = property["id"] + 1
         vc.configs["specification"]["norm"] = property["norm"]
         vc.configs["specification"]["epsilon"] = property["eps"]
         vc.save_configs(self.config_path)
+        self.logger.debug(vc.configs)
 
     def run(self, model_path, property, log_path):
         self.configure(property)

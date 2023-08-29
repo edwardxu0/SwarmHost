@@ -13,12 +13,12 @@ class MNBab(Verifier):
         # TODO: fix this
         self.config_path = "mnbab_configs.json"
 
-    def configure(self, property):
+    def configure(self):
         vc = VerifierConfigs(self)
         vc.save_configs(self.config_path)
 
     def run(self, model_path, property, log_path):
-        self.configure(property)
+        self.configure()
         artifact = property["artifact"]
         eps = property["eps"]
         img_id = property["id"]
