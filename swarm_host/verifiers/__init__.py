@@ -4,12 +4,13 @@ import subprocess
 
 from abc import ABC
 
-RES_MONITOR_PRETIME = 60
+RES_MONITOR_PRETIME = 200
 
 
 class Verifier(ABC):
-    def __init__(self, logger):
-        self.logger = logger
+    def __init__(self, verification_problem):
+        self.verification_problem = verification_problem
+        self.logger = verification_problem.logger
 
     def execute(self, cmd, log_path, time, memory):
         res_monitor_path = os.path.join(os.environ["DNNV"], "tools", "resmonitor.py")
@@ -18,15 +19,14 @@ class Verifier(ABC):
             + cmd
         )
 
-        save_log = True
-        if save_log:
-            veri_log_file = open(log_path, "w")
+        if log_path:
+            veri_log_fp = open(log_path, "w")
         else:
-            veri_log_file = sys.stdout
+            veri_log_fp = sys.stdout
 
         self.logger.info("Executing DNNV ...")
         self.logger.debug(cmd)
-        self.logger.debug(f"Verification output path: {veri_log_file}")
+        self.logger.debug(f"Verification output path: {veri_log_fp}")
 
         """
         # Run verification twice to account for performance issues
@@ -42,17 +42,10 @@ class Verifier(ABC):
         rc = sp.wait()
         assert rc == 0
         """
-
-        self.logger.info("Wet run ...")
-        if save_log:
-            with open(log_path, "a") as fp:
-                fp.write("********Wet_Run********\n")
-        else:
-            print("********Wet_Run********\n")
+        veri_log_fp.write("********Wet_Run********\n")
         # 2. Wet run
-        sp = subprocess.Popen(
-            cmd, shell=True, stdout=veri_log_file, stderr=veri_log_file
-        )
+        sp = subprocess.Popen(cmd, shell=True, stdout=veri_log_fp, stderr=veri_log_fp)
         rc = sp.wait()
         assert rc == 0
-        veri_log_file.close()
+        if log_path:
+            veri_log_fp.close()

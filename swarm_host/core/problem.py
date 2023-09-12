@@ -8,16 +8,16 @@ class VerificationProblem:
     def __init__(
         self,
         logger,
-        veri_log_path,
         property,
         verifier,
+        verifier_config,
+        paths,
         greybox=False,
     ):
         self.logger = logger
-        self.veri_log_path = veri_log_path
-        self.greybox = False
         self.property = property
-        self.results = None
+        self.paths = paths
+        self.verifier_config = verifier_config
         self.init_verifiers(verifier)
 
     def init_verifiers(self, verifier):
@@ -26,12 +26,14 @@ class VerificationProblem:
 
         if verifier_name == "abcrown":
             assert verifier_framework == "SH"
-            verifier = ABCrown(self.logger)
+            verifier = ABCrown(self)
+        elif verifier_name == "abcrown2":
+            verifier = ABCrown(self, beta=True)
         elif verifier_name == "mnbab":
             assert verifier_framework == "SH"
-            verifier = MNBab(self.logger)
+            verifier = MNBab(self)
         elif verifier_name == "verinet":
-            verifier = Verinet(self.logger)
+            verifier = Verinet(self)
         elif verifier_name == "DNNV":
             assert verifier_framework == "DNNV"
             raise NotImplementedError()
@@ -39,22 +41,18 @@ class VerificationProblem:
             raise ValueError(verifier_name)
         self.verifier = verifier
 
-    def generate_property(self, property):
+    def generate_property(self):
         self.logger.info(f"Generating property ... ")
-        if isinstance(self.verifier, MNBab) or isinstance(self.verifier, Verinet):
-            assert property["type"] == "local robustness"
-            self.property = LocalRobustnessProperty(property)
-            self.property.generate(format="vnnlib")
-
-        # no need for ABCrown
-        elif isinstance(self.verifier, ABCrown):
-            ...
+        if type(self.verifier) in [ABCrown, MNBab, Verinet]:
+            assert self.property["type"] == "local robustness"
+            self.property = LocalRobustnessProperty(self.logger, self.property)
+            self.property.generate(self.paths["prop_dir"], format="vnnlib")
         else:
             raise NotImplementedError()
-        self.logger.info(f"Property generated.  ")
+        self.logger.info(f"Property generated.")
 
-    def verify(self, model_path, property):
-        return self.verifier.run(model_path, property, self.veri_log_path)
+    def verify(self):
+        return self.verifier.run()
 
     def analyze(self):
-        return self.verifier.analyze(self.veri_log_path)
+        return self.verifier.analyze()

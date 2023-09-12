@@ -5,30 +5,30 @@ from torchvision import datasets, transforms
 
 
 class Property:
-    def __init__(self):
-        ...
+    def __init__(self, logger):
+        self.logger = logger
 
     def generate(self):
         ...
 
 
 class LocalRobustnessProperty(Property):
-    def __init__(self, property_configs):
+    def __init__(self, logger, property_configs):
+        super().__init__(logger)
         self.property_configs = property_configs
 
-    def generate(self, format):
+    def generate(self, prop_dir, format):
         if format == "vnnlib":
-            self.gen_vnnlib()
+            self.gen_vnnlib(prop_dir)
         else:
             raise NotImplementedError()
 
-    def gen_vnnlib(self):
+    def gen_vnnlib(self, prop_dir):
         artifact = self.property_configs["artifact"]
         eps = self.property_configs["eps"]
         img_id = self.property_configs["id"]
-        property_path = os.path.join(
-            self.property_configs["prop_dir"], f"{artifact}_{img_id}_{eps}.vnnlib"
-        )
+        self.property_path = os.path.join(prop_dir, f"{artifact}_{img_id}_{eps}.vnnlib")
+
         transform = transforms.Compose(
             [transforms.ToTensor(), transforms.Normalize((0,), (1,))]
         )
@@ -93,6 +93,6 @@ class LocalRobustnessProperty(Property):
         else:
             assert False
 
-        print(property_path)
-        with open(property_path, "w") as fp:
+        with open(self.property_path, "w") as fp:
             fp.writelines(x + "\n" for x in vnn_lib_lines)
+        self.logger.debug("Property generated: {self.property_path}")

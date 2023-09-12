@@ -5,36 +5,35 @@ from ..verifier_configs import VerifierConfigs
 
 
 class MNBab(Verifier):
-    def __init__(self, logger):
-        super(MNBab, self).__init__(logger)
+    def __init__(self, verification_problem):
+        super().__init__(verification_problem)
         self.__name__ = "mn-bab"
-        self.logger = logger
-
-        # TODO: fix this
-        self.config_path = "mnbab_configs.json"
 
     def configure(self):
         vc = VerifierConfigs(self)
-        vc.save_configs(self.config_path)
-
-    def run(self, model_path, property, log_path):
-        self.configure()
-        artifact = property["artifact"]
-        eps = property["eps"]
-        img_id = property["id"]
-        property_path = os.path.join(
-            property["prop_dir"], f"{artifact}_{img_id}_{eps}.vnnlib"
+        vc.save_configs(self.verification_problem.paths["veri_config_path"])
+        self.logger.debug(
+            f"Verification config saved to: {self.verification_problem.paths['veri_config_path']}"
         )
-        time = property["time"]
-        memory = property["memory"]
 
-        cmd = f"$SwarmHost/scripts/run_mnbab.sh --config $OCTOPUS/{self.config_path} --onnx_path $OCTOPUS/{model_path} --vnnlib_path $OCTOPUS/{property_path} --timeout {time}"
+    def run(self):
+        self.configure()
+
+        config_path = self.verification_problem.paths["veri_config_path"]
+        property_path = self.verification_problem.property.property_path
+        model_path = self.verification_problem.paths["model_path"]
+        log_path = self.verification_problem.paths["veri_log_path"]
+
+        time = self.verification_problem.verifier_config["time"]
+        memory = self.verification_problem.verifier_config["memory"]
+
+        cmd = f"$SwarmHost/scripts/run_mnbab.sh --config $OCTOPUS/{config_path} --onnx_path $OCTOPUS/{model_path} --vnnlib_path $OCTOPUS/{property_path} --timeout {time}"
 
         print(cmd)
         self.execute(cmd, log_path, time, memory)
 
-    def analyze(self, log_path):
-        with open(log_path, "r") as fp:
+    def analyze(self):
+        with open(self.verification_problem.paths["veri_log_path"], "r") as fp:
             lines = fp.readlines()
 
         veri_ans = None
@@ -48,8 +47,18 @@ class MNBab(Verifier):
             if "Time:" in l:
                 veri_time = float(l.split()[-1][:-1])
 
+            error_pattern = [
+                "index_of_last_intermediate_bounds_kept",
+                "cannot reshape tensor of 0 elements into shape",
+            ]
+            if any([True for x in error_pattern if x in l]):
+                veri_ans = "error"
+                veri_time = -100
+
             if veri_ans and veri_time:
                 break
 
-        assert veri_ans and veri_time
+        assert (
+            veri_ans and veri_time
+        ), f"Answer: {veri_ans}, time: {veri_time}, log: {self.verification_problem.paths['veri_log_path']}"
         return veri_ans, veri_time
