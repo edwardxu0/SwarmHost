@@ -1,6 +1,8 @@
 from ..verifiers.abcrown import ABCrown
 from ..verifiers.mnbab import MNBab
 from ..verifiers.verinet import Verinet
+from ..verifiers.nnenum import NNEnum
+
 from .property import LocalRobustnessProperty
 
 
@@ -25,15 +27,15 @@ class VerificationProblem:
         verifier_name = verifier.split(":")[1]
 
         if verifier_name == "abcrown":
-            assert verifier_framework == "SH"
             verifier = ABCrown(self)
         elif verifier_name == "abcrown2":
             verifier = ABCrown(self, beta=True)
         elif verifier_name == "mnbab":
-            assert verifier_framework == "SH"
             verifier = MNBab(self)
         elif verifier_name == "verinet":
             verifier = Verinet(self)
+        elif verifier_name == "nnenum":
+            verifier = NNEnum(self)
         elif verifier_name == "DNNV":
             assert verifier_framework == "DNNV"
             raise NotImplementedError()
@@ -43,7 +45,7 @@ class VerificationProblem:
 
     def generate_property(self):
         self.logger.info(f"Generating property ... ")
-        if type(self.verifier) in [ABCrown, MNBab, Verinet]:
+        if type(self.verifier) in [ABCrown, MNBab, Verinet, NNEnum]:
             assert self.property["type"] == "local robustness"
             self.property = LocalRobustnessProperty(self.logger, self.property)
             self.property.generate(self.paths["prop_dir"], format="vnnlib")
