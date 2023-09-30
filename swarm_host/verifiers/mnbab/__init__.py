@@ -36,27 +36,32 @@ class MNBab(Verifier):
         with open(self.verification_problem.paths["veri_log_path"], "r") as fp:
             lines = fp.readlines()
 
-        veri_ans = None
-        veri_time = None
-        for l in lines[-100:]:
-            if "Result: True" in l:
-                veri_ans = "unsat"
-            elif "Result: False" in l:
-                veri_ans = "sat"
+        veri_ans, veri_time = super().pre_analyze(lines)
 
-            if "Time:" in l:
-                veri_time = float(l.split()[-1][:-1])
+        if not (veri_ans and veri_time):
+            veri_ans = None
+            veri_time = None
+            for l in lines[-100:]:
+                if "Result: True" in l:
+                    veri_ans = "unsat"
+                elif "Result: False" in l:
+                    veri_ans = "sat"
 
-            error_pattern = [
-                "index_of_last_intermediate_bounds_kept",
-                "cannot reshape tensor of 0 elements into shape",
-            ]
-            if any([True for x in error_pattern if x in l]):
-                veri_ans = "error"
-                veri_time = -100
+                if "Time:" in l:
+                    veri_time = float(l.split()[-1][:-1])
 
-            if veri_ans and veri_time:
-                break
+                error_pattern = [
+                    "index_of_last_intermediate_bounds_kept",
+                    "cannot reshape tensor of 0 elements into shape",
+                    "Model was converted incorrectly",
+                    "RuntimeError: mat1 and mat2 shapes cannot be multiplied",
+                ]
+                if any([True for x in error_pattern if x in l]):
+                    veri_ans = "error"
+                    veri_time = -1
+
+                if veri_ans and veri_time:
+                    break
 
         assert (
             veri_ans and veri_time

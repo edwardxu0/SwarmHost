@@ -47,7 +47,7 @@ class LocalRobustnessProperty(Property):
 
         # 2) define output
         vnn_lib_lines += [""]
-        if artifact == "MNIST":
+        if artifact in ["MNIST", "CIFAR10"]:
             nb_output = 10
         elif artifact == "DAVE2":
             nb_output = 1
@@ -59,14 +59,21 @@ class LocalRobustnessProperty(Property):
         # 3) define input constraints:
         vnn_lib_lines += ["", "; Input constraints:"]
         for i, x in enumerate(img_npy):
+            lb = x - eps
+            ub = x + eps
+            if "clip" in self.property_configs and self.property_configs["clip"]:
+                if lb < 0:
+                    lb = 0.0
+                if ub > 1:
+                    ub = 1.0
             vnn_lib_lines += [
-                f"(assert (<= X_{i} {x+eps}))",
-                f"(assert (>= X_{i} {x-eps}))",
+                f"(assert (<= X_{i} {ub}))",
+                f"(assert (>= X_{i} {lb}))",
             ]
 
         # 4) define output constraints:
         vnn_lib_lines += ["", f"; Output constraints:"]
-        if artifact == "MNIST":
+        if artifact in ["MNIST", "CIFAR10"]:
             vnn_lib_lines += ["(assert (or"]
             for x in range(nb_output):
                 if not x == label:

@@ -4,18 +4,17 @@ import subprocess
 
 from abc import ABC
 
-RES_MONITOR_PRETIME = 200
 
-
-class Verifier(ABC):
+class Verifier:
     def __init__(self, verification_problem):
         self.verification_problem = verification_problem
         self.logger = verification_problem.logger
+        self.RES_MONITOR_PRETIME = 200
 
     def execute(self, cmd, log_path, time, memory):
         res_monitor_path = os.path.join(os.environ["DNNV"], "tools", "resmonitor.py")
         cmd = (
-            f"python3 {res_monitor_path} -T {time+RES_MONITOR_PRETIME} -M {memory} "
+            f"python3 {res_monitor_path} -T {time+self.RES_MONITOR_PRETIME} -M {memory} "
             + cmd
         )
 
@@ -49,3 +48,17 @@ class Verifier(ABC):
         assert rc == 0
         if log_path:
             veri_log_fp.close()
+
+    def pre_analyze(self, lines):
+        veri_ans = None
+        veri_time = None
+
+        for l in lines:
+            if "Timeout (terminating process)" in l:
+                veri_ans = "timeout"
+                veri_time = float(l.strip().split()[-1]) - self.RES_MONITOR_PRETIME
+            elif "Out of Memory" in l:
+                veri_ans = "memout"
+                veri_time = float(l.strip().split()[-1]) - self.RES_MONITOR_PRETIME
+
+        return veri_ans, veri_time

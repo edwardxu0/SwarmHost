@@ -37,17 +37,19 @@ class ABCrown(Verifier):
     def analyze(self):
         with open(self.verification_problem.paths["veri_log_path"], "r") as fp:
             lines = fp.readlines()
+        veri_ans, veri_time = super().pre_analyze(lines)
 
-        veri_ans = None
-        veri_time = None
-        for l in lines[-100:]:
-            if "Result: " in l:
-                veri_ans = l.strip().split()[-1]
-            elif "Time: " in l:
-                veri_time = float(l.strip().split()[-1])
+        if not (veri_ans and veri_time):
+            veri_ans = None
+            veri_time = None
+            for l in lines[-100:]:
+                if "Result: " in l:
+                    veri_ans = l.strip().split()[-1]
+                elif "Time: " in l:
+                    veri_time = float(l.strip().split()[-1])
 
-            if veri_ans and veri_time:
-                break
+                if veri_ans and veri_time:
+                    break
 
-        assert veri_ans and veri_time
+        assert veri_ans and veri_time, self.verification_problem.paths["veri_log_path"]
         return veri_ans, veri_time
