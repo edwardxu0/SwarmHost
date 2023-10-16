@@ -10,14 +10,14 @@ class VerificationProblem:
     def __init__(
         self,
         logger,
-        property,
+        property_configs,
         verifier,
         verifier_config,
         paths,
         greybox=False,
     ):
         self.logger = logger
-        self.property = property
+        self.property_configs = property_configs
         self.paths = paths
         self.verifier_config = verifier_config
         self.init_verifiers(verifier)
@@ -46,8 +46,8 @@ class VerificationProblem:
     def generate_property(self):
         self.logger.info(f"Generating property ... ")
         if type(self.verifier) in [ABCrown, MNBab, Verinet, NNEnum]:
-            assert self.property["type"] == "local robustness"
-            self.property = LocalRobustnessProperty(self.logger, self.property)
+            assert self.property_configs["type"] == "local robustness"
+            self.property = LocalRobustnessProperty(self.logger, self.property_configs)
             self.property.generate(self.paths["prop_dir"], format="vnnlib")
         else:
             raise NotImplementedError()
