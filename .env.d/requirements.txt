@@ -1,0 +1,10 @@
+torch
+torchvision
+pyfiglet
+toml
+numpy
+tqdm
+onnx
+onnxruntime
+pillow
+psutil

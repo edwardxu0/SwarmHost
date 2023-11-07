@@ -8,8 +8,8 @@ class Property:
     def __init__(self, logger):
         self.logger = logger
 
-    def generate(self):
-        ...
+    def set(self, path):
+        self.property_path = path
 
 
 class LocalRobustnessProperty(Property):
@@ -102,4 +102,4 @@ class LocalRobustnessProperty(Property):
 
         with open(self.property_path, "w") as fp:
             fp.writelines(x + "\n" for x in vnn_lib_lines)
-        self.logger.debug("Property generated: {self.property_path}")
+        self.logger.debug(f"Property generated: {self.property_path}")

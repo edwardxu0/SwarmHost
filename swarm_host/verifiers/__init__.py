@@ -41,7 +41,7 @@ class Verifier:
         rc = sp.wait()
         assert rc == 0
         """
-        veri_log_fp.write("********Wet_Run********\n")
+        # veri_log_fp.write("********Wet_Run********\n")
         # 2. Wet run
         sp = subprocess.Popen(cmd, shell=True, stdout=veri_log_fp, stderr=veri_log_fp)
         rc = sp.wait()

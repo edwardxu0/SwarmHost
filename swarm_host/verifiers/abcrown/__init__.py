@@ -31,7 +31,7 @@ class ABCrown(Verifier):
         time = self.verification_problem.verifier_config["time"]
         memory = self.verification_problem.verifier_config["memory"]
 
-        cmd = f"$SwarmHost/scripts/run_abcrown.sh --config $OCTOPUS/{config_path} --onnx_path $OCTOPUS/{model_path} --vnnlib_path {property_path} --timeout {time}"
+        cmd = f"$SwarmHost/scripts/run_abcrown.sh --config {config_path} --onnx_path {model_path} --vnnlib_path {property_path} --timeout {time}"
         self.execute(cmd, log_path, time, memory)
 
     def analyze(self):

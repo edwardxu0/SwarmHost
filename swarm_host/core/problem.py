@@ -3,7 +3,7 @@ from ..verifiers.mnbab import MNBab
 from ..verifiers.verinet import Verinet
 from ..verifiers.nnenum import NNEnum
 
-from .property import LocalRobustnessProperty
+from .property import Property, LocalRobustnessProperty
 
 
 class VerificationProblem:
@@ -43,12 +43,17 @@ class VerificationProblem:
             raise ValueError(verifier_name)
         self.verifier = verifier
 
-    def generate_property(self):
+    def set_generic_property(self, path):
+        self.logger.info(f"Using predefined generic property.")
+        self.property = Property(self.logger)
+        self.property.set(path)
+
+    def generate_property(self, format="vnnlib"):
         self.logger.info(f"Generating property ... ")
         if type(self.verifier) in [ABCrown, MNBab, Verinet, NNEnum]:
             assert self.property_configs["type"] == "local robustness"
             self.property = LocalRobustnessProperty(self.logger, self.property_configs)
-            self.property.generate(self.paths["prop_dir"], format="vnnlib")
+            self.property.generate(self.paths["prop_dir"], format=format)
         else:
             raise NotImplementedError()
         self.logger.info(f"Property generated.")
