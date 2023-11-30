@@ -4,22 +4,18 @@ from .. import Verifier
 from ..verifier_configs import VerifierConfigs
 
 
-class ABCrown(Verifier):
-    def __init__(self, verification_problem, beta=False):
+class NeuralSat(Verifier):
+    def __init__(self, verification_problem):
         super().__init__(verification_problem)
-        self.__name__ = "ABCrown"
-        self.beta = beta
+        self.__name__ = "NeuralSat"
 
     def configure(self, config_path):
-        vc = VerifierConfigs(self)
-        if self.beta:
-            vc.configs["solver"]["beta-crown"]["beta"] = True
-        vc.save_configs(config_path)
-        self.logger.debug(f"Verification config saved to: {config_path}")
+        ...
 
     def run(self, config_path, model_path, property_path, log_path, time, memory):
-
-        cmd = f"$SwarmHost/scripts/run_abcrown.sh --config {config_path} --onnx_path {model_path} --vnnlib_path {property_path} --timeout {time}"
+        dataset = self.verification_problem.property.property_configs['artifact'].lower()
+        
+        cmd = f"$SwarmHost/scripts/run_neuralsat.sh --net {model_path} --spec {property_path} --dataset {dataset}"
         
         self.execute(cmd, log_path, time, memory)
 
@@ -32,12 +28,15 @@ class ABCrown(Verifier):
             veri_ans = None
             veri_time = None
             for l in lines[-100:]:
-                if "Result: " in l:
-                    veri_ans = l.strip().split()[-1]
-                elif "Time: " in l:
+                if " UNSAT " in l:
+                    veri_ans = 'unsat'
+                elif " SAT " in l and 'Number of SAT variables' not in l:
+                    veri_ans = 'sat'
+                elif " UNKNOWN " in l:
+                    veri_ans = 'unknown'
+                if veri_ans:
                     veri_time = float(l.strip().split()[-1])
-
-                if veri_ans and veri_time:
+                    print(veri_time)
                     break
 
         assert (

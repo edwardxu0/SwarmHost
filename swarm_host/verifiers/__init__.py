@@ -2,8 +2,6 @@ import os
 import sys
 import subprocess
 
-from abc import ABC
-
 
 class Verifier:
     def __init__(self, verification_problem):
@@ -12,7 +10,7 @@ class Verifier:
         self.RES_MONITOR_PRETIME = 200
 
     def execute(self, cmd, log_path, time, memory):
-        res_monitor_path = os.path.join(os.environ["DNNV"], "tools", "resmonitor.py")
+        res_monitor_path = os.path.join(os.environ["SwarmHost"], "lib", "resmonitor.py")
         cmd = (
             f"python3 {res_monitor_path} -T {time+self.RES_MONITOR_PRETIME} -M {memory} "
             + cmd
@@ -23,26 +21,10 @@ class Verifier:
         else:
             veri_log_fp = sys.stdout
 
-        self.logger.info("Executing DNNV ...")
+        self.logger.info("Executing verification ...")
         self.logger.debug(cmd)
         self.logger.debug(f"Verification output path: {veri_log_fp}")
 
-        """
-        # Run verification twice to account for performance issues
-        # TODO: fix later
-        self.logger.info("Dry run ...")
-        if save_log:
-            open(self.veri_log_path, "a").write("********Dry_Run********\n")
-        else:
-            print("********Dry_Run********\n")
-        sp = subprocess.Popen(
-            cmd, shell=True, stdout=veri_log_file, stderr=veri_log_file
-        )
-        rc = sp.wait()
-        assert rc == 0
-        """
-        # veri_log_fp.write("********Wet_Run********\n")
-        # 2. Wet run
         sp = subprocess.Popen(cmd, shell=True, stdout=veri_log_fp, stderr=veri_log_fp)
         rc = sp.wait()
         assert rc == 0
@@ -56,9 +38,15 @@ class Verifier:
         for l in lines:
             if "Timeout (terminating process)" in l:
                 veri_ans = "timeout"
-                veri_time = float(l.strip().split()[-1]) - self.RES_MONITOR_PRETIME
+                veri_time = float(l.strip().split()[-1])
             elif "Out of Memory" in l:
                 veri_ans = "memout"
-                veri_time = float(l.strip().split()[-1]) - self.RES_MONITOR_PRETIME
+                veri_time = float(l.strip().split()[-1])
 
         return veri_ans, veri_time
+
+    def post_analyze(self, answer, time):
+        if answer != 'timeout' and time > self.verification_problem.verifier_config["time"]:
+            answer = 'timeout'
+            time = self.verification_problem.verifier_config["time"]
+        return answer, time

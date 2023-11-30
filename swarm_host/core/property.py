@@ -29,14 +29,24 @@ class LocalRobustnessProperty(Property):
         img_id = self.property_configs["id"]
         self.property_path = os.path.join(prop_dir, f"{artifact}_{img_id}_{eps}.vnnlib")
 
-        transform = transforms.Compose(
-            [transforms.ToTensor(), transforms.Normalize((0,), (1,))]
-        )
+        t = [transforms.ToTensor()]
+        
+        mean = self.property_configs['mean']
+        std = self.property_configs['std']
+        if mean and std:
+            t += [transforms.Normalize(mean, std)]
+        elif not mean and not std:
+            t += [transforms.Normalize((0,), (1,))]
+        else:
+            assert False,"mean and std must be configured the same time"
+        transform = transforms.Compose(t)
         test_dataset = eval(f"datasets.{artifact}")(
             "data", download=True, train=False, transform=transform
         )
         img, label = test_dataset[img_id]
-        img_npy = numpy.asarray(img).flatten()
+        img_npy = numpy.asarray(img)
+        self.shape = img_npy.shape
+        img_npy = img_npy.flatten()
 
         # generate VNN-lib Property
         # 1) define input

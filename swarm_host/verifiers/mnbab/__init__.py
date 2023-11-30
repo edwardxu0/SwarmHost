@@ -7,29 +7,17 @@ from ..verifier_configs import VerifierConfigs
 class MNBab(Verifier):
     def __init__(self, verification_problem):
         super().__init__(verification_problem)
-        self.__name__ = "mn-bab"
+        self.__name__ = "Mn-Bab"
 
-    def configure(self):
+    def configure(self, config_path):
         vc = VerifierConfigs(self)
-        vc.save_configs(self.verification_problem.paths["veri_config_path"])
-        self.logger.debug(
-            f"Verification config saved to: {self.verification_problem.paths['veri_config_path']}"
-        )
+        vc.save_configs(config_path)
+        self.logger.debug(f"Verification config saved to: {config_path}")
 
-    def run(self):
-        self.configure()
+    def run(self, config_path, model_path, property_path, log_path, time, memory):
 
-        config_path = self.verification_problem.paths["veri_config_path"]
-        property_path = self.verification_problem.property.property_path
-        model_path = self.verification_problem.paths["model_path"]
-        log_path = self.verification_problem.paths["veri_log_path"]
-
-        time = self.verification_problem.verifier_config["time"]
-        memory = self.verification_problem.verifier_config["memory"]
-
-        cmd = f"$SwarmHost/scripts/run_mnbab.sh --config $OCTOPUS/{config_path} --onnx_path $OCTOPUS/{model_path} --vnnlib_path $OCTOPUS/{property_path} --timeout {time}"
-
-        print(cmd)
+        cmd = f"$SwarmHost/scripts/run_mnbab.sh --config $ROOT/{config_path} --onnx_path $ROOT/{model_path} --vnnlib_path $ROOT/{property_path} --timeout {time}"
+        
         self.execute(cmd, log_path, time, memory)
 
     def analyze(self):
@@ -66,4 +54,5 @@ class MNBab(Verifier):
         assert (
             veri_ans and veri_time
         ), f"Answer: {veri_ans}, time: {veri_time}, log: {self.verification_problem.paths['veri_log_path']}"
-        return veri_ans, veri_time
+        
+        return super().post_analyze(veri_ans, veri_time)

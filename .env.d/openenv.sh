@@ -3,7 +3,9 @@
 conda activate swarmhost
 
 if [ -z ${SwarmHost} ]; then
-  export $SwarmHost=`pwd`
+  export SwarmHost=`pwd`
 fi
 
-export swarmhost="python -m swarm_host"
+export ROOT=`pwd`
+
+alias swarmhost="python -m swarm_host"

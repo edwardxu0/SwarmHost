@@ -8,22 +8,13 @@ class NNEnum(Verifier):
         super().__init__(verification_problem)
         self.__name__ = "NNEnum"
 
-    def configure(self):
+    def configure(self, config_path):
         ...
 
-    def run(self):
-        self.configure()
+    def run(self, config_path, model_path, property_path, log_path, time, memory):
+        
+        cmd = f"$SwarmHost/scripts/run_nnenum.sh $ROOT/{model_path} $ROOT/{property_path} {time}"
 
-        property_path = self.verification_problem.property.property_path
-        model_path = self.verification_problem.paths["model_path"]
-        log_path = self.verification_problem.paths["veri_log_path"]
-
-        time = self.verification_problem.verifier_config["time"]
-        memory = self.verification_problem.verifier_config["memory"]
-
-        cmd = f"$SwarmHost/scripts/run_nnenum.sh $OCTOPUS/{model_path} $OCTOPUS/{property_path} {time}"
-
-        print(cmd)
         self.execute(cmd, log_path, time, memory)
 
     def analyze(self):
@@ -63,4 +54,5 @@ class NNEnum(Verifier):
         assert (
             veri_ans and veri_time
         ), f"Answer: {veri_ans}, time: {veri_time}, log: {self.verification_problem.paths['veri_log_path']}"
-        return veri_ans, veri_time
+        
+        return super().post_analyze(veri_ans, veri_time)

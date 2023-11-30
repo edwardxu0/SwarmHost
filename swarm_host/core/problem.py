@@ -2,6 +2,8 @@ from ..verifiers.abcrown import ABCrown
 from ..verifiers.mnbab import MNBab
 from ..verifiers.verinet import Verinet
 from ..verifiers.nnenum import NNEnum
+from ..verifiers.neuralsat import NeuralSat
+from ..verifiers.veristable import VeriStable
 
 from .property import Property, LocalRobustnessProperty
 
@@ -23,25 +25,24 @@ class VerificationProblem:
         self.init_verifiers(verifier)
 
     def init_verifiers(self, verifier):
-        verifier_framework = verifier.split(":")[0]
-        verifier_name = verifier.split(":")[1]
-
-        if verifier_name == "abcrown":
-            verifier = ABCrown(self)
-        elif verifier_name == "abcrown2":
-            verifier = ABCrown(self, beta=True)
-        elif verifier_name == "mnbab":
-            verifier = MNBab(self)
-        elif verifier_name == "verinet":
-            verifier = Verinet(self)
-        elif verifier_name == "nnenum":
-            verifier = NNEnum(self)
-        elif verifier_name == "DNNV":
-            assert verifier_framework == "DNNV"
-            raise NotImplementedError()
-        else:
-            raise ValueError(verifier_name)
-        self.verifier = verifier
+        match verifier:
+            case "acrown":
+                v = ABCrown(self)
+            case "abcrown":
+                v = ABCrown(self, beta=True)
+            case "mnbab":
+                v = MNBab(self)
+            case "verinet":
+                v = Verinet(self)
+            case "nnenum":
+                v = NNEnum(self)
+            case 'neuralsat':
+                v = NeuralSat(self)
+            case 'veristable':
+                v = VeriStable(self)
+            case _:
+                raise NotImplementedError(verifier)
+        self.verifier = v
 
     def set_generic_property(self, path):
         self.logger.info(f"Using predefined generic property.")
@@ -50,7 +51,7 @@ class VerificationProblem:
 
     def generate_property(self, format="vnnlib"):
         self.logger.info(f"Generating property ... ")
-        if type(self.verifier) in [ABCrown, MNBab, Verinet, NNEnum]:
+        if type(self.verifier) in [ABCrown, MNBab, Verinet, NNEnum, NeuralSat, VeriStable]:
             assert self.property_configs["type"] == "local robustness"
             self.property = LocalRobustnessProperty(self.logger, self.property_configs)
             self.property.generate(self.paths["prop_dir"], format=format)
@@ -59,7 +60,17 @@ class VerificationProblem:
         self.logger.info(f"Property generated.")
 
     def verify(self):
-        return self.verifier.run()
+        config_path = self.paths["veri_config_path"]
+        model_path = self.paths["model_path"]
+        property_path = self.property.property_path
+        log_path = self.paths["veri_log_path"]
+        time = self.verifier_config["time"]
+        memory = self.verifier_config["memory"]
+        
+        self.verifier.configure(config_path)
+        
+        #def run(self, config_path, model_path, property_path, log_path, time, memory):
+        return self.verifier.run(config_path, model_path, property_path, log_path, time, memory)
 
     def analyze(self):
         return self.verifier.analyze()

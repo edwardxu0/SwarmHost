@@ -5,34 +5,56 @@ from ..verifier_configs import VerifierConfigs
 
 
 class Verinet(Verifier):
-    def __init__(self, logger) -> None:
-        super(Verinet, self).__init__(logger)
-        self.__name__ = "verinet"
-        self.logger = logger
+    def __init__(self, verification_problem):
+        super().__init__(verification_problem)
+        self.__name__ = "Verinet"
 
-        # TODO: fix this
+        # TODO: add configuration?
         self.config_path = ""
 
-    def configure(self):
+    def configure(self, config_path):
         ...
+    
+    def run(self, config_path, model_path, property_path, log_path, time, memory):
+        
+        input_shape = ' '.join(str(x) for x in self.verification_problem.property.shape)
 
-    def run(self, model_path, property, log_path):
-        # self.configure(property)
-        artifact = property["artifact"]
-        eps = property["eps"]
-        img_id = property["id"]
-        property_path = os.path.join(
-            property["prop_dir"], f"{artifact}_{img_id}_{eps}.vnnlib"
-        )
-        time = property["time"]
-        memory = property["memory"]
-
-        # cmd = f"$SwarmHost/scripts/run_mnbab.sh --config $OCTOPUS/{self.config_path} --onnx_path $OCTOPUS/{model_path} --vnnlib_path $OCTOPUS/{property_path} --timeout {time}"
-
-        cmd = f"$SwarmHost/scripts/run_verinet.sh $OCTOPUS/{model_path} $OCTOPUS/{property_path} {time} --input_shape 1 1 28 28"
-
+        cmd = f"$SwarmHost/scripts/run_verinet.sh $ROOT/{model_path} $ROOT/{property_path} {time} --input_shape {input_shape}"
+        
         print(cmd)
         self.execute(cmd, log_path, time, memory)
 
     def analyze(self):
-        ...
+        with open(self.verification_problem.paths["veri_log_path"], "r") as fp:
+            lines = fp.readlines()
+
+        veri_ans, veri_time = super().pre_analyze(lines)
+
+        if not (veri_ans and veri_time):
+            for l in lines[-100:]:
+                if "Result: Status.Safe" in l:
+                    veri_ans = "unsat"
+                elif "Result: Status.Unsafe" in l:
+                    veri_ans = "sat"
+
+                if "Time: " in l:
+                    veri_time = float(l.strip().split()[-1])
+
+                '''
+                error_pattern = [
+                    "FloatingPointError: underflow encountered in multiply",
+                    "underflow encountered in divide",
+                ]
+                if any([True for x in error_pattern if x in l]):
+                    veri_ans = "error"
+                    veri_time = -1
+                '''
+                if veri_ans and veri_time:
+                    break
+
+        assert (
+            veri_ans and veri_time
+        ), f"Answer: {veri_ans}, time: {veri_time}, log: {self.verification_problem.paths['veri_log_path']}"
+        
+        return super().post_analyze(veri_ans, veri_time)
+

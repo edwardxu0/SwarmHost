@@ -4,22 +4,17 @@ from .. import Verifier
 from ..verifier_configs import VerifierConfigs
 
 
-class ABCrown(Verifier):
-    def __init__(self, verification_problem, beta=False):
+class VeriStable(Verifier):
+    def __init__(self, verification_problem):
         super().__init__(verification_problem)
-        self.__name__ = "ABCrown"
-        self.beta = beta
+        self.__name__ = "VeriStable"
 
     def configure(self, config_path):
-        vc = VerifierConfigs(self)
-        if self.beta:
-            vc.configs["solver"]["beta-crown"]["beta"] = True
-        vc.save_configs(config_path)
-        self.logger.debug(f"Verification config saved to: {config_path}")
+        ...
 
     def run(self, config_path, model_path, property_path, log_path, time, memory):
-
-        cmd = f"$SwarmHost/scripts/run_abcrown.sh --config {config_path} --onnx_path {model_path} --vnnlib_path {property_path} --timeout {time}"
+        
+        cmd = f"$SwarmHost/scripts/run_veristable.sh --net {model_path} --spec {property_path}"
         
         self.execute(cmd, log_path, time, memory)
 
@@ -32,12 +27,13 @@ class ABCrown(Verifier):
             veri_ans = None
             veri_time = None
             for l in lines[-100:]:
-                if "Result: " in l:
-                    veri_ans = l.strip().split()[-1]
-                elif "Time: " in l:
-                    veri_time = float(l.strip().split()[-1])
-
-                if veri_ans and veri_time:
+                if "unsat," in l:
+                    veri_ans = 'unsat'
+                elif "sat," in l:
+                    veri_ans = 'sat'
+                if veri_ans:
+                    veri_time = float(l.strip().split(',')[-1])
+                    print(veri_time)
                     break
 
         assert (

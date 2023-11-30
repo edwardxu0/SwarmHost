@@ -11,9 +11,14 @@ def parse_args():
     parser.add_argument(
         "task",
         type=str,
-        choices=["G", "V"],
-        help="Tasks to perform: [G]enerate property; [V]erify.",
+        choices=["G", "V", "A"],
+        help="Tasks to perform: [G]enerate property; [V]erify; and [A]nalyze result.",
     )
+    
+    parser.add_argument(
+        "verifier", choices=["acrown","abcrown", "mnbab",'nnenum','verinet','neuralsat','veristable'], help="Verifier to execute."
+    )
+    
     parser.add_argument("--onnx", type=str, help="Onnx model path.")
     parser.add_argument(
         "--property_path",
@@ -39,9 +44,6 @@ def parse_args():
         "--property_dir",
         type=str,
         help="Directory to store generated property.",
-    )
-    parser.add_argument(
-        "--verifier", choices=["abcrown", "mnbab"], help="Verifier to execute."
     )
 
     parser.add_argument(
@@ -80,5 +82,8 @@ def parse_args():
 
     parser.add_argument("--debug", action="store_true", help="Print debug log.")
     parser.add_argument("--dumb", action="store_true", help="Silent mode.")
+    parser.add_argument('--p_clip',action='store_true',help='Clip properties within [0,1]')
+    parser.add_argument('--p_mean', metavar='N', type=float, nargs='+',help='Mean of artifact')
+    parser.add_argument('--p_std', metavar='N', type=float, nargs='+',help='Std of artifact')
 
     return parser.parse_args()
