@@ -16,7 +16,7 @@ def parse_args():
     )
     
     parser.add_argument(
-        "verifier", choices=["acrown","abcrown", "mnbab",'nnenum','verinet','neuralsat','veristable'], help="Verifier to execute."
+        "verifier", choices=["acrown","abcrown", "mnbab",'nnenum','verinet','neuralsat','neuralsatp','veristable'], help="Verifier to execute."
     )
     
     parser.add_argument("--onnx", type=str, help="Onnx model path.")
@@ -82,7 +82,9 @@ def parse_args():
 
     parser.add_argument("--debug", action="store_true", help="Print debug log.")
     parser.add_argument("--dumb", action="store_true", help="Silent mode.")
+    
     parser.add_argument('--p_clip',action='store_true',help='Clip properties within [0,1]')
+    parser.add_argument('--p_mrb',action='store_true',help="Create Local Robustness based on model's output instead of label ground truth.")
     parser.add_argument('--p_mean', metavar='N', type=float, nargs='+',help='Mean of artifact')
     parser.add_argument('--p_std', metavar='N', type=float, nargs='+',help='Std of artifact')
 

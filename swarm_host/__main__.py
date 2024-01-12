@@ -18,7 +18,8 @@ def main():
         "eps": args.eps,
         "clip": args.p_clip,
         "mean": args.p_mean,
-        'std': args.p_std
+        'std': args.p_std,
+        'mrb': args.p_mrb
     }
     
     verifier_config = {
@@ -42,12 +43,12 @@ def main():
 
     match args.task:
         case "G":
-            vp.generate_property(format=args.property_format)
+            vp.generate_property(format=args.property_format, model_path=paths['model_path'])
         case "V":
             if args.property_path:
                 vp.set_generic_property(args.property_path)
             else:
-                vp.generate_property(format=args.property_format)
+                vp.generate_property(format=args.property_format, model_path=paths['model_path'])
 
             vp.verify()
         case "A":

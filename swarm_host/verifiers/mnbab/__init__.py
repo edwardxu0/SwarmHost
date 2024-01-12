@@ -34,6 +34,9 @@ class MNBab(Verifier):
                     veri_ans = "unsat"
                 elif "Result: False" in l:
                     veri_ans = "sat"
+                elif "AssertionError: output_lb:" in l:
+                    veri_ans = 'error'
+                    veri_time = -1
 
                 if "Time:" in l:
                     veri_time = float(l.split()[-1][:-1])

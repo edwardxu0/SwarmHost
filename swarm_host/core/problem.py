@@ -1,8 +1,10 @@
+import os
+
 from ..verifiers.abcrown import ABCrown
 from ..verifiers.mnbab import MNBab
 from ..verifiers.verinet import Verinet
 from ..verifiers.nnenum import NNEnum
-from ..verifiers.neuralsat import NeuralSat
+from ..verifiers.neuralsat import NeuralSat, NeuralSatP
 from ..verifiers.veristable import VeriStable
 
 from .property import Property, LocalRobustnessProperty
@@ -38,6 +40,8 @@ class VerificationProblem:
                 v = NNEnum(self)
             case 'neuralsat':
                 v = NeuralSat(self)
+            case 'neuralsatp':
+                v = NeuralSatP(self)
             case 'veristable':
                 v = VeriStable(self)
             case _:
@@ -49,12 +53,12 @@ class VerificationProblem:
         self.property = Property(self.logger)
         self.property.set(path)
 
-    def generate_property(self, format="vnnlib"):
+    def generate_property(self, format="vnnlib", model_path=None):
         self.logger.info(f"Generating property ... ")
-        if type(self.verifier) in [ABCrown, MNBab, Verinet, NNEnum, NeuralSat, VeriStable]:
+        if type(self.verifier) in [ABCrown, MNBab, Verinet, NNEnum, NeuralSat, NeuralSatP, VeriStable]:
             assert self.property_configs["type"] == "local robustness"
             self.property = LocalRobustnessProperty(self.logger, self.property_configs)
-            self.property.generate(self.paths["prop_dir"], format=format)
+            self.property.generate(self.paths["prop_dir"], format=format, model_path=model_path)
         else:
             raise NotImplementedError()
         self.logger.info(f"Property generated.")
@@ -68,8 +72,10 @@ class VerificationProblem:
         memory = self.verifier_config["memory"]
         
         self.verifier.configure(config_path)
+        if not os.path.exists(model_path):
+            self.logger.error(f'Model does not exist: {model_path}. Exiting.')
+            exit(1)
         
-        #def run(self, config_path, model_path, property_path, log_path, time, memory):
         return self.verifier.run(config_path, model_path, property_path, log_path, time, memory)
 
     def analyze(self):
