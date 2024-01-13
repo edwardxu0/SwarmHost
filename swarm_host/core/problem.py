@@ -1,5 +1,3 @@
-import os
-
 from ..verifiers.abcrown import ABCrown
 from ..verifiers.mnbab import MNBab
 from ..verifiers.verinet import Verinet
@@ -55,6 +53,7 @@ class VerificationProblem:
 
     def generate_property(self, format="vnnlib", model_path=None):
         self.logger.info(f"Generating property ... ")
+        
         if type(self.verifier) in [ABCrown, MNBab, Verinet, NNEnum, NeuralSat, NeuralSatP, VeriStable]:
             assert self.property_configs["type"] == "local robustness"
             self.property = LocalRobustnessProperty(self.logger, self.property_configs)
@@ -72,9 +71,6 @@ class VerificationProblem:
         memory = self.verifier_config["memory"]
         
         self.verifier.configure(config_path)
-        if not os.path.exists(model_path):
-            self.logger.error(f'Model does not exist: {model_path}. Exiting.')
-            exit(1)
         
         return self.verifier.run(config_path, model_path, property_path, log_path, time, memory)
 

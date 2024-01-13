@@ -1,3 +1,4 @@
+import os
 from .misc import cli
 from .misc import logging
 from .core.problem import VerificationProblem
@@ -41,6 +42,11 @@ def main():
         paths,
     )
 
+    if args.task in ['G','V']:
+        if not os.path.exists(args.onnx):
+            logger.error(f'Model does not exist: {args.onnx}. Exiting.')
+            exit(1)
+            
     match args.task:
         case "G":
             vp.generate_property(format=args.property_format, model_path=paths['model_path'])
