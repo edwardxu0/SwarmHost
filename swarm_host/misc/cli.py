@@ -16,7 +16,7 @@ def parse_args():
     )
     
     parser.add_argument(
-        "verifier", choices=["acrown","abcrown", "mnbab",'nnenum','verinet','neuralsat','neuralsatp','veristable'], help="Verifier to execute."
+        "verifier", help="Verifier to execute."
     )
     
     parser.add_argument("--onnx", type=str, help="Onnx model path.")

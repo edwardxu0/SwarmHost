@@ -2,7 +2,7 @@ from ..verifiers.abcrown import ABCrown
 from ..verifiers.mnbab import MNBab
 from ..verifiers.verinet import Verinet
 from ..verifiers.nnenum import NNEnum
-from ..verifiers.neuralsat import NeuralSat, NeuralSatP
+from ..verifiers.neuralsat import NeuralSat
 from ..verifiers.veristable import VeriStable
 
 from .property import Property, LocalRobustnessProperty
@@ -26,10 +26,41 @@ class VerificationProblem:
 
     def init_verifiers(self, verifier):
         match verifier:
-            case "acrown":
-                v = ABCrown(self)
+            case "acrown22":
+                configs = {
+                    'version': 22,
+                    'beta': False,
+                    'gpu': False
+                }
+                v = ABCrown(self, configs)
             case "abcrown":
-                v = ABCrown(self, beta=True)
+                configs = {
+                    'version': 22,
+                    'beta': True,
+                    'gpu': False
+                }
+                v = ABCrown(self, configs)
+            case "abcrown22":
+                configs = {
+                    'version': 22,
+                    'beta': True,
+                    'gpu': False
+                }
+                v = ABCrown(self, configs)
+            case "abcrown23":
+                configs = {
+                    'version': 23,
+                    'beta': True,
+                    'gpu': False
+                }
+                v = ABCrown(self, configs)
+            case "abcrown23g":
+                configs = {
+                    'version': 23,
+                    'beta': True,
+                    'gpu': True
+                }
+                v = ABCrown(self, configs)
             case "mnbab":
                 v = MNBab(self)
             case "verinet":
@@ -37,9 +68,11 @@ class VerificationProblem:
             case "nnenum":
                 v = NNEnum(self)
             case 'neuralsat':
-                v = NeuralSat(self)
+                v = NeuralSat(self, version=1)
             case 'neuralsatp':
-                v = NeuralSatP(self)
+                v = NeuralSat(self, version=2)
+            case 'neuralsatpp':
+                v = NeuralSat(self, version=3)
             case 'veristable':
                 v = VeriStable(self)
             case _:
@@ -54,7 +87,7 @@ class VerificationProblem:
     def generate_property(self, format="vnnlib", model_path=None):
         self.logger.info(f"Generating property ... ")
         
-        if type(self.verifier) in [ABCrown, MNBab, Verinet, NNEnum, NeuralSat, NeuralSatP, VeriStable]:
+        if type(self.verifier) in [ABCrown, MNBab, Verinet, NNEnum, NeuralSat, VeriStable]:
             assert self.property_configs["type"] == "local robustness"
             self.property = LocalRobustnessProperty(self.logger, self.property_configs)
             self.property.generate(self.paths["prop_dir"], format=format, model_path=model_path)

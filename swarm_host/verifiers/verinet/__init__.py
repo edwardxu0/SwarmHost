@@ -31,7 +31,7 @@ class Verinet(Verifier):
         veri_ans, veri_time = super().pre_analyze(lines)
 
         if not (veri_ans and veri_time):
-            for l in lines[-100:]:
+            for l in lines:
                 if "Result: Status.Safe" in l:
                     veri_ans = "unsat"
                 elif "Result: Status.Unsafe" in l:
