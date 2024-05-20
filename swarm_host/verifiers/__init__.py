@@ -41,7 +41,7 @@ class Verifier:
                 veri_time = float(l.strip().split()[-1])
             elif "Out of Memory" in l:
                 veri_ans = "memout"
-                veri_time = float(l.strip().split()[-1])
+                veri_time = -1
             elif "Model does not exist" in l:
                 veri_ans = 'hardware_limit'
                 veri_time = -1
